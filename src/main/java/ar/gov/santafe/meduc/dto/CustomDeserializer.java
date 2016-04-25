@@ -10,6 +10,7 @@ import org.codehaus.jackson.JsonProcessingException;
 import org.codehaus.jackson.map.DeserializationContext;
 import org.codehaus.jackson.map.JsonDeserializer;
 import org.codehaus.jackson.node.ArrayNode;
+import org.codehaus.jackson.node.NullNode;
 import org.codehaus.jackson.node.NumericNode;
 import org.codehaus.jackson.node.TextNode;
 
@@ -30,24 +31,23 @@ public class CustomDeserializer extends JsonDeserializer<SimpleDto> {
 
     private void addGenericNode(String rootField, JsonNode aNode, SimpleDto genericDto) {
 
-        if (aNode.isTextual()) {
+        if (aNode.isNull()) {
+            add(rootField, (NullNode) aNode, genericDto);
+        } else if (aNode.isTextual()) {
             add(rootField, (TextNode) aNode, genericDto);
-            return;
         } else if (aNode.isNumber()) {
             add(rootField, (NumericNode) aNode, genericDto);
-            return;
         } else if (aNode.isArray()) {
             add(rootField, (ArrayNode) aNode, genericDto);
-            return;
         } else {
             Iterator<String> iterator = aNode.getFieldNames();
-            SimpleDto childDto = rootField.equals("root")?genericDto:new SimpleDto();
+            SimpleDto childDto = rootField.equals("root") ? genericDto : new SimpleDto();
             while (iterator.hasNext()) {
                 String field = iterator.next();
                 JsonNode element = aNode.get(field);
                 addGenericNode(field, element, childDto);
             }
-            if (!rootField.equals("root")&&!childDto.isEmpty()){
+            if (!rootField.equals("root") && !childDto.isEmpty()) {
                 genericDto.add(rootField, childDto);
             }
 
@@ -79,5 +79,9 @@ public class CustomDeserializer extends JsonDeserializer<SimpleDto> {
 
     private void add(String field, TextNode aNode, SimpleDto genericDto) {
         genericDto.add(field, aNode.asText());
+    }
+
+    private void add(String field, NullNode aNode, SimpleDto genericDto) {
+        genericDto.addNull(field);
     }
 }

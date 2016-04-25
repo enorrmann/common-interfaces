@@ -1,5 +1,6 @@
 package ar.gov.santafe.meduc.dto;
 
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -8,12 +9,15 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.codehaus.jackson.annotate.JsonIgnore;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.annotate.JsonDeserialize;
 import org.codehaus.jackson.map.annotate.JsonRootName;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
@@ -30,6 +34,16 @@ public class SimpleDto {
 
     }
 
+    public SimpleDto(String json) {
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            atributos = mapper.readValue(json, LinkedHashMap.class);
+        } catch (IOException ex) {
+            Logger.getLogger(SimpleDto.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+    }
+
     public SimpleDto(Object[] args) {
         for (int i = 0; i < args.length; i++) {
             this.atributos.put("arg" + i, args[i]);
@@ -42,6 +56,14 @@ public class SimpleDto {
         } else {
             atributos = args;
         }
+    }
+
+    public SimpleDto addNull(String name) {
+        if (name != null) {
+            atributos.put(name, null);
+        }
+        return this;
+
     }
 
     public SimpleDto add(String name, Object atributo) {
@@ -65,12 +87,33 @@ public class SimpleDto {
         return attr == null ? null : attr.toString();
     }
 
+    public Long getLong(String atributo) {
+        Object attr = this.atributos.get(atributo);
+        return attr == null ? null : Long.valueOf(attr.toString());
+    }
+
     public Map<String, Object> getAtributos() {
         return atributos;
     }
 
     public void setAtributos(HashMap<String, Object> atributos) {
         this.atributos = atributos;
+    }
+
+    public List<String> getStringList(String key) {
+        List list = (List) atributos.get(key);
+        if (list == null) {
+            return null;
+        }
+        return list;
+    }
+
+    public List<Long> getLongList(String key) {
+        List<Long> longList = new ArrayList<>();
+        for (String aString : getStringList(key)){
+            longList.add(Long.valueOf(aString));
+        }
+        return longList;
     }
 
     public List<SimpleDto> getList(String key) {
@@ -83,10 +126,11 @@ public class SimpleDto {
         }
         if (list.get(0) instanceof Map) {
             return getGenericDtoFromMapList(list);
-        } else if (list.get(0) instanceof SimpleDto) {
-            return list;
+            //  } else if (list.get(0) instanceof SimpleDto) {
+            // return list;
         } else {
-            return null;
+            //   return null;
+            return list;
         }
 
     }
@@ -228,4 +272,38 @@ public class SimpleDto {
         return true;
     }
 
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        final String QUOT = "\"";
+        sb.append("{");
+        if (this.atributos != null) {
+            int count = 0;
+            for (String clave : (Set<String>) this.atributos.keySet()) {
+                Object valor = atributos.get(clave);
+                sb.append(QUOT);
+                sb.append(clave);
+                sb.append(QUOT);
+                sb.append(":");
+                if (!isString(valor)) {
+                    sb.append(valor);
+                } else {
+                    sb.append(QUOT);
+                    sb.append(valor);
+                    sb.append(QUOT);
+                }
+
+                if (++count < atributos.keySet().size()) {
+                    sb.append(",");
+                }
+            }
+            sb.append("}");
+        }
+        return sb.toString();
+    }
+
+    private boolean isString(Object o) {
+        return o instanceof String;
+
+    }
 }
