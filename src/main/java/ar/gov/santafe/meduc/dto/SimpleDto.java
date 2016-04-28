@@ -103,7 +103,7 @@ public class SimpleDto {
     public List<String> getStringList(String key) {
         List list = (List) atributos.get(key);
         if (list == null) {
-            return null;
+            return new ArrayList<String>();
         }
         return list;
     }
@@ -305,5 +305,11 @@ public class SimpleDto {
     private boolean isString(Object o) {
         return o instanceof String;
 
+    }
+    
+    public void remove(String key){
+        if (atributos!=null&&atributos.containsKey(key)){
+            atributos.remove(key);
+        }
     }
 }
