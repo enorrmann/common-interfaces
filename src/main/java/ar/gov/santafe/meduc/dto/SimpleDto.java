@@ -110,7 +110,7 @@ public class SimpleDto {
 
     public List<Long> getLongList(String key) {
         List<Long> longList = new ArrayList<>();
-        for (String aString : getStringList(key)){
+        for (String aString : getStringList(key)) {
             longList.add(Long.valueOf(aString));
         }
         return longList;
@@ -304,11 +304,15 @@ public class SimpleDto {
 
     private boolean isString(Object o) {
         return o instanceof String;
+    }
+
+    public boolean isList(String key) {
+        return atributos.get(key) != null && atributos.get(key) instanceof List;
 
     }
-    
-    public void remove(String key){
-        if (atributos!=null&&atributos.containsKey(key)){
+
+    public void remove(String key) {
+        if (atributos != null && atributos.containsKey(key)) {
             atributos.remove(key);
         }
     }
